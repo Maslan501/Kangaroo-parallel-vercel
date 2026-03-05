@@ -412,7 +412,7 @@
             if (!searches || searches.length === 0) {
                 console.log('No searches found, displaying empty message');
                 document.getElementById('searchesList').innerHTML = 
-                    '<div class="no-searches">No active searches. Run <code>run_parallel_search.bat</code> to start 10 parallel workers!</div>';
+                    '<div class="no-searches">No active searches. Run <code>START_ALL.bat</code> or <code>start_parallel_search.bat</code> to start 10 parallel workers!</div>';
                 document.getElementById('workerCount').textContent = '';
                 return;
             }
