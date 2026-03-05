@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦘 Kangaroo v2.2+ Monitor - Bitcoin Puzzle Search</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card .label {
+            color: #999;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-card .value.success {
+            color: #10b981;
+        }
+
+        .searches-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .search-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #667eea;
+        }
+
+        .search-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .puzzle-badge {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .zone-badge {
+            background: #10b981;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.9em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .search-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .search-stat {
+            background: rgba(255,255,255,0.8);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .search-stat .stat-label {
+            color: #666;
+            font-size: 0.85em;
+            margin-bottom: 3px;
+        }
+
+        .search-stat .stat-value {
+            color: #333;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .found-keys {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .found-key-card {
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .found-key-card .key-puzzle {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .found-key-card .key-detail {
+            margin: 8px 0;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5em;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .last-update {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .no-searches {
+            text-align: center;
+            padding: 50px;
+            color: #999;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .search-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🦘 Kangaroo v2.2+ Monitor (Parallel)</h1>
+            <div class="subtitle">Enhanced Bitcoin Puzzle Search - 10 Workers Running Simultaneously</div>
+            <div style="margin-top: 10px; padding: 10px; background: #f0fdf4; border-radius: 8px; color: #15803d; font-weight: bold;">
+                ⚡ PARALLEL MODE: Multiple puzzles searched at once for maximum speed
+            </div>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading statistics...
+            </div>
+        </div>
+
+        <div class="found-keys" id="foundKeys" style="display: none;">
+            <h2 class="section-title">🎉 Solved Puzzles</h2>
+            <div id="foundKeysList"></div>
+        </div>
+
+        <div class="searches-section">
+            <h2 class="section-title">📊 Active Parallel Searches <span id="workerCount" style="font-size: 0.7em; color: #10b981;"></span></h2>
+            <div id="searchesList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading parallel searches...
+                </div>
+            </div>
+        </div>
+
+        <div class="last-update">
+            Last updated: <span id="lastUpdate">-</span> | Auto-refresh every 5 seconds
+        </div>
+    </div>
+
+    <script>
+        // API endpoint
+        const API_URL = '/api/status';
+        
+        // Update interval (5 seconds)
+        const UPDATE_INTERVAL = 5000;
+
+        // Format numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        // Format timestamp
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString();
+        }
+
+        // Calculate ETA
+        function calculateETA(progress, totalJumps) {
+            if (progress <= 0) return 'Calculating...';
+            
+            const remaining = 100 - progress;
+            const rate = 1200; // Approximate jumps per second
+            const remainingJumps = (totalJumps / progress) * remaining;
+            const remainingSeconds = remainingJumps / rate;
+            
+            if (remainingSeconds < 3600) {
+                return `${Math.round(remainingSeconds / 60)} minutes`;
+            } else if (remainingSeconds < 86400) {
+                return `${(remainingSeconds / 3600).toFixed(1)} hours`;
+            } else {
+                return `${(remainingSeconds / 86400).toFixed(1)} days`;
+            }
+        }
+
+        // Update dashboard
+        async function updateDashboard() {
+            try {
+                console.log('Fetching data from:', API_URL);
+                const response = await fetch(API_URL);
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Received data:', data);
+                
+                // Update timestamp
+                document.getElementById('lastUpdate').textContent = formatTime(data.timestamp);
+                
+                // Update stats grid
+                updateStatsGrid(data);
+                
+                // Update searches list
+                updateSearchesList(data.searches);
+                
+                // Update found keys
+                if (data.solved && data.solved.length > 0) {
+                    updateFoundKeys(data.solved);
+                }
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('searchesList').innerHTML = 
+                    '<div class="error">Error loading data. Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Update stats grid
+        function updateStatsGrid(data) {
+            const parallelSpeedup = data.active_searches > 1 ? `${data.active_searches}x` : '1x';
+            const totalRate = data.total_jumps > 0 ? Math.round(data.total_jumps / 10) : 0; // Approximate rate
+            
+            const html = `
+                <div class="stat-card">
+                    <div class="label">🔄 Parallel Workers</div>
+                    <div class="value">${data.active_searches}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">⚡ Speed Multiplier</div>
+                    <div class="value" style="color: #f59e0b;">${parallelSpeedup}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">🎉 Solved Puzzles</div>
+                    <div class="value success">${data.found_keys}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">🦘 Total Jumps</div>
+                    <div class="value">${formatNumber(data.total_jumps)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">📍 Distinguished Points</div>
+                    <div class="value">${formatNumber(data.total_dps)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">📊 Average Progress</div>
+                    <div class="value">${data.avg_progress.toFixed(2)}%</div>
+                </div>
+            `;
+            
+            document.getElementById('statsGrid').innerHTML = html;
+        }
+
+        // Update searches list
+        function updateSearchesList(searches) {
+            console.log('updateSearchesList called with:', searches);
+            
+            if (!searches || searches.length === 0) {
+                console.log('No searches found, displaying empty message');
+                document.getElementById('searchesList').innerHTML = 
+                    '<div class="no-searches">No active searches. Run <code>run_parallel_search.bat</code> to start 10 parallel workers!</div>';
+                document.getElementById('workerCount').textContent = '';
+                return;
+            }
+            
+            console.log('Found', searches.length, 'searches');
+            
+            // Update worker count
+            const workerCountText = searches.length === 1 ? '(1 worker)' : `(${searches.length} workers running)`;
+            document.getElementById('workerCount').textContent = workerCountText;
+            
+            const html = searches.map((search, index) => `
+                <div class="search-card">
+                    <div class="search-header">
+                        <span style="background: #6b7280; color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.85em; font-weight: bold;">Worker ${index + 1}</span>
+                        <span class="puzzle-badge">Puzzle #${search.puzzle_num}</span>
+                        <span class="zone-badge">Zone: ${search.zone}</span>
+                        <span style="color: #666; font-size: 0.9em;">${search.range_bits} bits</span>
+                    </div>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${search.progress}%">
+                            ${search.progress.toFixed(2)}%
+                        </div>
+                    </div>
+                    
+                    <div class="search-stats">
+                        <div class="search-stat">
+                            <div class="stat-label">Iterations</div>
+                            <div class="stat-value">${formatNumber(search.iterations)}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">Total Jumps</div>
+                            <div class="stat-value">${formatNumber(search.total_jumps)}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">Kangaroos</div>
+                            <div class="stat-value">${search.num_kangaroos * 2}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">DPs Found</div>
+                            <div class="stat-value">${formatNumber(search.dp_count)}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">Tame Points</div>
+                            <div class="stat-value">${formatNumber(search.tame_points)}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">Wild Points</div>
+                            <div class="stat-value">${formatNumber(search.wild_points)}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">Last Update</div>
+                            <div class="stat-value" style="font-size: 0.8em;">${formatTime(search.timestamp)}</div>
+                        </div>
+                        <div class="search-stat">
+                            <div class="stat-label">Est. Time</div>
+                            <div class="stat-value" style="font-size: 0.85em;">${calculateETA(search.progress, search.total_jumps)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('searchesList').innerHTML = html;
+        }
+
+        // Update found keys
+        function updateFoundKeys(solvedKeys) {
+            const foundKeysSection = document.getElementById('foundKeys');
+            const foundKeysList = document.getElementById('foundKeysList');
+            
+            if (solvedKeys.length === 0) {
+                foundKeysSection.style.display = 'none';
+                return;
+            }
+            
+            foundKeysSection.style.display = 'block';
+            
+            const html = solvedKeys.map(key => `
+                <div class="found-key-card">
+                    <div class="key-puzzle">🎉 Puzzle #${key.puzzle} SOLVED!</div>
+                    <div class="key-detail"><strong>Time:</strong> ${key.timestamp}</div>
+                    <div class="key-detail"><strong>Address:</strong> ${key.address}</div>
+                    <div class="key-detail"><strong>Private Key:</strong> ${key.private_key_hex}</div>
+                </div>
+            `).join('');
+            
+            foundKeysList.innerHTML = html;
+        }
+
+        // Initial load
+        updateDashboard();
+        
+        // Auto-refresh
+        setInterval(updateDashboard, UPDATE_INTERVAL);
+    </script>
+</body>
+</html>
